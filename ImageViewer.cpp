@@ -209,7 +209,7 @@ void ImageViewer::ViewerWidgetEnter(ViewerWidget* w, QEvent* event)
 void ImageViewer::ViewerWidgetWheel(ViewerWidget* w, QEvent* event)
 {
 	QWheelEvent* wheelEvent = static_cast<QWheelEvent*>(event);
-	if (nakreslene) {
+	if (nakreslene && ui->mode->currentIndex()==0) {
 		int i;
 		double coef;
 		if (wheelEvent->angleDelta().y() > 0) 
