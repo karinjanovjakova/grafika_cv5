@@ -481,8 +481,10 @@ void ImageViewer::on_Clear2_clicked() {
 void ImageViewer::on_kresli_clicked() {
 	if (ui->krivka->currentIndex() == 0) {
 		if (poly.size() < 2) {
-			//message, ze sa neda
-			qDebug() << "neda sa";
+			msgBox.setText(u8"Minnimálny poèet bodov je 2. Zadajte ïalšie body.");
+			msgBox.setIcon(QMessageBox::Information);
+			msgBox.exec();
+			return;
 		}
 		else {
 			getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex(),rotacie);
@@ -491,8 +493,10 @@ void ImageViewer::on_kresli_clicked() {
 	}
 	if (ui->krivka->currentIndex() == 1) {
 		if (poly.size() < 3) {
-			//message, ze sa neda
-			qDebug() << "neda sa";
+			msgBox.setText(u8"Minnimálny poèet bodov je 3. Zadajte ïalšie body.");
+			msgBox.setIcon(QMessageBox::Information);
+			msgBox.exec();
+			return;
 		}
 		else {
 			getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex(),rotacie);
@@ -500,8 +504,10 @@ void ImageViewer::on_kresli_clicked() {
 	}
 	if (ui->krivka->currentIndex() == 2) {
 		if (poly.size() < 4) {
-			//message, ze sa neda
-			qDebug() << "neda sa";
+			msgBox.setText(u8"Minnimálny poèet bodov je 4. Zadajte ïalšie body.");
+			msgBox.setIcon(QMessageBox::Information);
+			msgBox.exec();
+			return;
 		}
 		else {
 			getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex(),rotacie);
