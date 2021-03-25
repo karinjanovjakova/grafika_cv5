@@ -318,7 +318,14 @@
                 </widget>
                </item>
                <item>
-                <widget class="QDoubleSpinBox" name="uhol"/>
+                <widget class="QDoubleSpinBox" name="uhol">
+                 <property name="minimum">
+                  <double>-360.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>360.000000000000000</double>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
