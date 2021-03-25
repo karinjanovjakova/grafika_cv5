@@ -55,7 +55,8 @@ private:
 	bool nakreslene = false;
 	QColor farba = Qt::black;
 	QColor vypln = Qt::white;
-
+	QVector <float> rotacie;
+ 
 
 private slots:
 	//Tabs slots
@@ -80,4 +81,6 @@ private slots:
 	void on_sko_clicked();
 	void on_comboBox_2_currentIndexChanged(int i);
 	void on_mode_currentIndexChanged(int i);
+	void on_bod_currentIndexChanged(int i);
+	void on_uhol_valueChanged(double i);
 };

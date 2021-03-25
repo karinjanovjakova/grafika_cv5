@@ -89,6 +89,7 @@ void ViewerWidget::paintEvent(QPaintEvent* event)
 //kresliace a vyfarbovacie funkcie
 
 void ViewerWidget::usecka_DDA(QPoint A, QPoint B, QColor color) {
+	qDebug() << "som v DDA s bodmi" << A <<B;
 	int x, y, x2, y2 ;
 	double chyba = 0;
 	if (B.y() == A.y()) {
@@ -160,6 +161,7 @@ void ViewerWidget::usecka_DDA(QPoint A, QPoint B, QColor color) {
 }
 
 void ViewerWidget::usecka_Bresenham(QPoint A, QPoint B, QColor color) {
+	qDebug() << "som v bresenham s bodmi" << A << B;
 	int dx, dy, p, x, y, x2, y2;
 	if (B.y() == A.y()) {
 		int delta = abs(A.x() - B.x()), x1;
@@ -1030,14 +1032,110 @@ void ViewerWidget::kresliBod(QPoint A){
 	pen.setColor("red");
 	painter->setPen(pen);
 	painter->drawPoint(A);
+	qDebug()<<"nakreslil som bod " << A;
 	update();
 }
 
-void ViewerWidget::kresliKrivku(QVector <QPoint> body, int algo, int algou) {
-	qDebug() << "kreslim krivku " << algo;
+void ViewerWidget::kresliKrivku(QVector <QPoint> body, int algo, int algou, QVector<float> rot) {
+	qDebug() << "kreslim krivku " << algo << "s poctom bodov" << body.size();
 	if (algo == 0) {						//hermit
+		int i;
+		float deltaT = 0.1;
+		float F0, F1, F2, F3;
+		QPoint Q0, Q1;
+		QPoint v0, v1;
+		QPoint dot1, dot0;
+
+		float rot0 = rot[0] * M_PI / 180.0;		//vypocet koncoveho bodu vektora
+		v0.setX(body[0].x() + qSin(rot0) * 150);
+		v0.setY(body[0].y() + qCos(rot0) * 150);
+		if (algou == 0)							//vykreslenie vektora
+			usecka_DDA(body[0], v0, Qt::blue);
+		else
+			usecka_Bresenham(body[0], v0, Qt::blue);
+		dot0.setX(qSin(rot0) * 150);
+		dot0.setY(qCos(rot0) * 150);
+
+		for (i = 1; i < body.size(); i++) {
+
+			float rot1 = rot[i] * M_PI / 180.0;	//vypocet koncoveho bodu vektora
+			v1.setX(body[i].x() + qSin(rot1) * 150);
+			v1.setY(body[i].y() + qCos(rot1) * 150);
+			if (algou == 0)						//vykreslenie vektora
+				usecka_DDA(body[i], v1, Qt::blue);
+			else
+				usecka_Bresenham(body[i], v1, Qt::blue);
+			dot1.setX(qSin(rot1) * 150);
+			dot1.setY(qCos(rot1) * 150);
+
+			Q0.setX(body[i - 1].x());
+			Q0.setY(body[i - 1].y());
+			float T = deltaT;
+			while (T < 1) {
+				F0 = 2 * T * T * T - 3 * T * T + 1;
+				F1 = -2 * T * T * T + 3 * T * T;
+				F2 = T * T * T - 2 * T * T + T;
+				F3 = T * T * T - T * T; 
+				Q1.setX(body[i - 1].x() * F0 + body[i].x() * F1 + dot0.x() * F2 + dot1.x() * F3);
+				Q1.setY(body[i - 1].y() * F0 + body[i].y() * F1 + dot0.y() * F2 + dot1.y() * F3);
+
+				if (algou == 0)
+					usecka_DDA(Q0, Q1, Qt::black);
+				else
+					usecka_Bresenham(Q0, Q1, Qt::black);
+
+				Q0 = Q1;
+				T += deltaT;
+
+			}
+			rot0 = rot1;		
+			dot0 = dot1;			
+
+			if (algou == 0)
+				usecka_DDA(Q0, body[i], Qt::black);
+			else
+				usecka_Bresenham(Q0, body[i], Qt::black);
+		}
 	}
 	else if (algo == 1) {					//bezier
+		int i, j;
+		QPoint Q0, Q1;
+		float deltaT = 0.1;
+		float T = deltaT;
+
+		QVector<QVector<QPoint>> P(body.size());
+		for (i = 0; i < body.size(); i++) {
+			P[i].resize(body.size() - i);		
+			P[0][i] = body[i];
+		}
+		Q0.setX(body[0].x());
+		Q0.setY(body[0].y());
+		while (T < 1) {
+			for (i = 1; i < body.size(); i++) {
+				for (j = 0; j < body.size() - i; j++) {
+					P[i][j].setX((1.0 - T) * P[i - 1][j].x() + T * P[i - 1][j + 1].x());
+					P[i][j].setY((1.0 - T) * P[i - 1][j].y() + T * P[i - 1][j + 1].y());
+				}
+			}
+			Q1.setX(P[body.size() - 1][0].x());
+			Q1.setY(P[body.size() - 1][0].y());
+
+			qDebug() << Q0 << Q1;
+			if (algou == 0)
+				usecka_DDA(Q0, Q1, Qt::black);
+			else 
+				usecka_Bresenham(Q0, Q1, Qt::black);
+			
+			Q0 = Q1;
+			T += deltaT;
+
+		} 
+		Q1.setX(body[body.size() - 1].x());
+		Q1.setY(body[body.size() - 1].y());
+		if (algou == 0)
+			usecka_DDA(Q0, Q1, Qt::black);
+		else
+			usecka_Bresenham(Q0, Q1, Qt::black);
 	}
 	else if (algo == 2) {					//coons
 		int i;
@@ -1045,9 +1143,6 @@ void ViewerWidget::kresliKrivku(QVector <QPoint> body, int algo, int algou) {
 		QPoint Q0, Q1;
 		float B0, B1, B2, B3;
 		float T = 0.0;
-		QVector<QPoint> usecka;
-		QPoint A(0, 0), B(100, 100);
-		qDebug() << A<< B;
 
 		for (i = 3; i < body.size(); i++) {
 			qDebug() << "je v cykle";
@@ -1056,26 +1151,80 @@ void ViewerWidget::kresliKrivku(QVector <QPoint> body, int algo, int algou) {
 			B1 = (1.0 / 2) * T * T * T - T * T + (2.0 / 3);
 			B2 = (-1.0 / 2) * T * T * T + (1.0 / 2) * T * T + (1.0 / 2) * T + (1.0 / 6);
 			B3 = (1.0 / 6) * T * T * T;
-			Q0 = body[i - 3] * B0 + body[i - 2] * B1 + body[i - 1] * B2 + body[i] * B3;
+			Q0.setX(body[i - 3].x() * B0 + body[i - 2].x() * B1 + body[i - 1].x() * B2 + body[i].x() * B3);
+			Q0.setY(body[i - 3].y() * B0 + body[i - 2].y() * B1 + body[i - 1].y() * B2 + body[i].y() * B3);
 
-			while (T <= 1) {
+			while (T < 1.0) {
 				T += deltaT;
 				B0 = (-1.0 / 6) * T * T * T + (1.0 / 2) * T * T - (1.0 / 2) * T + (1.0 / 6);
 				B1 = (1.0 / 2) * T * T * T - T * T + (2.0 / 3);
 				B2 = (-1.0 / 2) * T * T * T + (1.0 / 2) * T * T + (1.0 / 2) * T + (1.0 / 6);
 				B3 = (1.0 / 6) * T * T * T;
-				Q1 = body[i - 3] * B0 + body[i - 2] * B1 + body[i - 1] * B2 + body[i] * B3;
+				Q1.setX(body[i - 3].x() * B0 + body[i - 2].x() * B1 + body[i - 1].x() * B2 + body[i].x() * B3);
+				Q1.setY(body[i - 3].y() * B0 + body[i - 2].y() * B1 + body[i - 1].y() * B2 + body[i].y() * B3);
+				if (algou == 0)
+					usecka_DDA(Q0, Q1, Qt::black);
+				else
+					usecka_Bresenham(Q0, Q1, Qt::black);
 
-				usecka = {Q0,Q1};
-				qDebug()<< usecka;
-				//orez(usecka, algou);
-				usecka_Bresenham(Q0, Q1, Qt::black);
-
+				qDebug() << Q0 << Q1;
 				Q0 = Q1;
-
 			} 
 		}
 	}
-	qDebug() << "dokoncil";
+	for (int i = 0; i < body.size(); i++)
+		kresliBod(body[i]);
 	update();
+	qDebug() << "dokoncil";
 }
+/*
+void ViewerWidget::kresliKrivku(QVector<QPoint> points, int algo, int algou)
+{
+	int n = points.size();
+	QColor color = QColor("blue");
+	double b0, b1, b2, b3, t2, t3;
+
+	if (n < 4) { return; }
+	else
+	{
+		QPoint q0, q1; double qx, qy;
+		double deltaT = 0.1; double t;
+
+		for (int i = 3; i < n; i++)
+		{
+			t = 0;
+
+			t2 = t * t; t3 = t * t * t;
+			b0 = (-1 / 6.0 * t3) + (1 / 2.0 * t2) - (1 / 2.0 * t) + (1.0 / 6.0);
+			b1 = (1 / 2.0 * t3) - t2 + (2 / 3.0);
+			b2 = (-1 / 2.0 * t3) + (1 / 2.0 * t2) + (1 / 2.0 * t) + (1 / 6.0);
+			b3 = 1 / 6.0 * t3;
+
+			qx = points[i - 3].x() * b0 + points[i - 2].x() * b1 + points[i - 1].x() * b2 + points[i].x() * b3;
+			qy = points[i - 3].y() * b0 + points[i - 2].y() * b1 + points[i - 1].y() * b2 + points[i].y() * b3;
+			q0.setX(qx); q0.setY(qy);
+
+			while (t < 1)
+			{
+				t += deltaT;
+
+				t2 = t * t; t3 = t * t * t;
+				b0 = (-1 / 6.0 * t3) + (1 / 2.0 * t2) - (1 / 2.0 * t) + (1.0 / 6.0);
+				b1 = (1 / 2.0 * t3) - t2 + (2 / 3.0);
+				b2 = (-1 / 2.0 * t3) + (1 / 2.0 * t2) + (1 / 2.0 * t) + (1 / 6.0);
+				b3 = 1 / 6.0 * t3;
+
+				qx = points[i - 3].x() * b0 + points[i - 2].x() * b1 + points[i - 1].x() * b2 + points[i].x() * b3;
+				qy = points[i - 3].y() * b0 + points[i - 2].y() * b1 + points[i - 1].y() * b2 + points[i].y() * b3;
+
+				q1.setX(qx); q1.setY(qy);
+				usecka_DDA(q0, q1, Qt::black);
+				qDebug() << q0 << q1;
+				q0.setX(q1.x()); q0.setY(q1.y());
+			}
+		}
+	}
+	for (int i=0;i<points.size();i++)
+		kresliBod(points[i]);
+	update();
+}*/

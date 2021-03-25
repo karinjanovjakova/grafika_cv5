@@ -23,7 +23,7 @@ public:
 	void usecka_Bresenham(QPoint A, QPoint B, QColor color);
 	void kruznica(QPoint A, QPoint B, QColor color);
 	void kresliPolygon(QVector <QPoint> body, QColor color, int algo, QColor vypln, int algovypln);
-	void kresliKrivku(QVector <QPoint> body, int algo, int algou);
+	void kresliKrivku(QVector <QPoint> body, int algo, int algou, QVector<float> rot);
 	void kresliBod(QPoint A);
 	void scanLine(QVector <QPoint> body, QColor color);
 	void scanLineTri(QVector <QPoint> body, QColor color, int algovypln);
