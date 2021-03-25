@@ -106,6 +106,8 @@ void ImageViewer::ViewerWidgetMouseButtonPress(ViewerWidget* w, QEvent* event)
 						prvybod = true;
 						ui->comboBox->setEnabled(false);
 						ui->polygon->setEnabled(false);
+						ui->comboBox->setEnabled(false);
+						ui->mode->setEnabled(false);
 					}
 				}
 				else if (ui->polygon->isChecked()) {
@@ -115,6 +117,8 @@ void ImageViewer::ViewerWidgetMouseButtonPress(ViewerWidget* w, QEvent* event)
 						prvybod = true;
 						ui->comboBox->setEnabled(false);
 						ui->polygon->setEnabled(false);
+						ui->comboBox->setEnabled(false);
+						ui->mode->setEnabled(false);
 					}
 					else {
 						B = e->pos();
@@ -151,11 +155,18 @@ void ImageViewer::ViewerWidgetMouseButtonPress(ViewerWidget* w, QEvent* event)
 			A = e->pos();
 		}
 	}
-	else if (ui->mode->currentIndex() == 1) {
+	else if (ui->mode->currentIndex() == 1 && !nakreslene) {
 		if (e->button() == Qt::LeftButton) {
 			A = e->pos();
 			poly.push_back(A);
 			getCurrentViewerWidget()->kresliBod(A);
+			ui->comboBox->setEnabled(false);
+			ui->mode->setEnabled(false);
+			rotacie.append(0);
+			qDebug() << rotacie[0];
+			int i = rotacie.size();
+			ui->bod->addItem("bod");
+
 		}
 	}
 }
@@ -423,8 +434,12 @@ void ImageViewer::on_vypln_clicked()
 void ImageViewer::on_Clear_clicked() {
 	nakreslene = false;
 	prvybod = false;
+	rotacie.clear();
+	rotacie.squeeze();
 	poly.clear();
+	poly.squeeze();
 	temp.clear();
+	temp.squeeze();
 	ui->polygon->setEnabled(true);
 	ui->comboBox->setEnabled(true);
 	ui->transform->setVisible(false);
@@ -433,6 +448,8 @@ void ImageViewer::on_Clear_clicked() {
 		ui->poly->setVisible(true);
 	else
 		ui->poly->setVisible(false);
+	ui->comboBox->setEnabled(true);
+	ui->mode->setEnabled(true);
 	clearImage();
 	update();
 }
@@ -440,9 +457,18 @@ void ImageViewer::on_Clear_clicked() {
 void ImageViewer::on_Clear2_clicked() {
 	nakreslene = false;
 	prvybod = false;
+	rotacie.clear();
+	rotacie.squeeze();
+	//ui->bod->clear();
+	//for (int i=0; i<poly.size();i++)
+		//ui->bod->removeItem(0);
 	poly.clear();
 	poly.squeeze();
 	temp.clear();
+	temp.squeeze();
+	ui->comboBox->setEnabled(true);
+	ui->hermit->setVisible(false);
+	ui->mode->setEnabled(true);
 	ui->transform->setVisible(false);
 	ui->fill->setVisible(false);
 	if (ui->mode->currentIndex() == 0)
@@ -450,6 +476,7 @@ void ImageViewer::on_Clear2_clicked() {
 	else
 		ui->poly->setVisible(false);
 	ui->krivka->setEnabled(true);
+	ui->bod->clear();
 	clearImage();
 	update();
 }
@@ -458,30 +485,33 @@ void ImageViewer::on_kresli_clicked() {
 	if (ui->krivka->currentIndex() == 0) {
 		if (poly.size() < 2) {
 			//message, ze sa neda
+			qDebug() << "neda sa";
 		}
 		else {
-			getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex());
+			getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex(),rotacie);
+			ui->hermit->setVisible(true);
 		}
 	}
 	if (ui->krivka->currentIndex() == 1) {
 		if (poly.size() < 3) {
 			//message, ze sa neda
+			qDebug() << "neda sa";
 		}
 		else {
-			getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex());
+			getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex(),rotacie);
 		}
 	}
 	if (ui->krivka->currentIndex() == 2) {
 		if (poly.size() < 4) {
 			//message, ze sa neda
+			qDebug() << "neda sa";
 		}
 		else {
-			getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex());
+			getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex(),rotacie);
 		}
 	}
 	nakreslene = true;
 	ui->krivka->setEnabled(false);
-	clearImage();
 	update();
 }
 
@@ -566,7 +596,20 @@ void ImageViewer::on_mode_currentIndexChanged(int i) {
 		ui->poly->setVisible(false);
 		ui->fill->setVisible(false);
 		ui->krivky->setVisible(true);
+		ui->hermit->setVisible(false);
 		poly.clear();
 		poly.squeeze();
 	}
+}
+void ImageViewer::on_bod_currentIndexChanged(int i) {
+	ui->uhol->setValue(rotacie[i]);
+}
+
+void ImageViewer::on_uhol_valueChanged(double i) {
+	if (!rotacie.isEmpty()) {
+		rotacie[ui->bod->currentIndex()] = i;
+		clearImage();
+		getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex(), rotacie);
+	}
+	
 }
