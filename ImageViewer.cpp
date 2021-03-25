@@ -163,8 +163,6 @@ void ImageViewer::ViewerWidgetMouseButtonPress(ViewerWidget* w, QEvent* event)
 			ui->comboBox->setEnabled(false);
 			ui->mode->setEnabled(false);
 			rotacie.append(0);
-			qDebug() << rotacie[0];
-			int i = rotacie.size();
 			ui->bod->addItem("bod");
 
 		}
@@ -430,7 +428,6 @@ void ImageViewer::on_vypln_clicked()
 	
 }
 
-
 void ImageViewer::on_Clear_clicked() {
 	nakreslene = false;
 	prvybod = false;
@@ -601,8 +598,10 @@ void ImageViewer::on_mode_currentIndexChanged(int i) {
 		poly.squeeze();
 	}
 }
+
 void ImageViewer::on_bod_currentIndexChanged(int i) {
-	ui->uhol->setValue(rotacie[i]);
+	if (!rotacie.isEmpty())
+		ui->uhol->setValue(rotacie[i]);
 }
 
 void ImageViewer::on_uhol_valueChanged(double i) {
@@ -610,6 +609,5 @@ void ImageViewer::on_uhol_valueChanged(double i) {
 		rotacie[ui->bod->currentIndex()] = i;
 		clearImage();
 		getCurrentViewerWidget()->kresliKrivku(poly, ui->krivka->currentIndex(), ui->comboBox->currentIndex(), rotacie);
-	}
-	
+	}	
 }
